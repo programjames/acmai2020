@@ -46,31 +46,44 @@ global my_bases
 
 global score_map
 energies = [[game_map.get_tile(i, j).energium for i in range(WIDTH)] for j in range(HEIGHT)]
-score_map = None
+score_map = [[energies[j][i] for i in range(WIDTH)] for j in range(HEIGHT)]
+score_map_2 = [[energies[j][i] for i in range(WIDTH)] for j in range(HEIGHT)]
 def set_score_map(unit=None, max_time=0.05):
     global score_map, energies
-    score_map = [[energies[j][i] for i in range(WIDTH)] for j in range(HEIGHT)]
+    #score_map = [[energies[j][i] for i in range(WIDTH)] for j in range(HEIGHT)]
     t = time.time()
     depth = 0
     repair_turn = 0 if unit is None else unit.last_repair_turn
-    need_repairs = False if unit is None else unit.match_turn - unit.last_repair_turn > 80
     while time.time() - t < max_time:
         depth += 1
         for a in range(WIDTH):
             for b in range(HEIGHT):
-                if breakable_map[b][a] > repair_turn:
-                    score_map[b][a] = -UNIT_COST
-                else:
-                    s = 0
-                    s2 = 0
-                    for dx, dy in NEIGHBORS:
-                        x = dx + a
-                        y = dy + b
-                        if x > 0 and x < WIDTH and y > 0 and y < HEIGHT:
-                            s = max(s, score_map[y][x])
-                    score_map[b][a] = energies[b][a] + 0.9 * s
-                    if need_repairs and base_map[b][a]:
-                        score_map[b][a] += UNIT_COST
+                s = 0
+                for dx, dy in NEIGHBORS:
+                    x = dx + a
+                    y = dy + b
+                    if x > 0 and x < WIDTH and y > 0 and y < HEIGHT and breakable_map[y][x] <= repair_turn:
+                        s = max(s, score_map[y][x])
+                score_map[b][a] = energies[b][a] + 0.9 * s
+def set_score_map_2(unit=None, max_time=0.05):
+    global score_map_2, energies
+    #score_map_2 = [[energies[j][i] for i in range(WIDTH)] for j in range(HEIGHT)]
+    t = time.time()
+    depth = 0
+    repair_turn = 0 if unit is None else unit.last_repair_turn
+    while time.time() - t < max_time:
+        depth += 1
+        for a in range(WIDTH):
+            for b in range(HEIGHT):
+                s = 0
+                for dx, dy in NEIGHBORS:
+                    x = dx + a
+                    y = dy + b
+                    if x > 0 and x < WIDTH and y > 0 and y < HEIGHT and breakable_map[y][x] <= repair_turn:
+                        s = max(s, score_map_2[y][x])
+                score_map_2[b][a] = energies[b][a] + 0.9 * s
+                if base_map[b][a]:
+                    score_map_2[b][a] += UNIT_COST
 
 def set_breakable_map(my_units, enemy_units, enemy_bases):
     global breakable_map
@@ -101,7 +114,7 @@ def set_base_map(my_bases):
 # Once initialized, we enter an infinite loop
 base_map_set = False
 
-TOTAL_TIME = 0.9
+TOTAL_TIME = 0.8
 
 move_dict = dict()
 while True:
@@ -141,24 +154,44 @@ while True:
     set_breakable_map(my_units, enemy_units, enemy_bases)
 
     for unit in my_units:
-        breakable_map[unit.y][unit.x] = 0
-        set_score_map(unit, TOTAL_TIME / len(my_units))
-        move = [0, 0]
-        score = score_map[unit.y][unit.x]
-        for dx, dy in NEIGHBORS:
-            x = unit.x + dx
-            y = unit.y + dy
-            if x > 0 and x < WIDTH and y > 0 and y < HEIGHT:
-                s = score_map[y][x]
-                if breakable_map[y][x] > unit.last_repair_turn:
-                    s -= UNIT_COST
-                if s > score:
-                    score = s
-                    move = [dx, dy]
-        dir = move_to_dir(move)
-        if dir is not None:
-            commands.append(unit.move(move_to_dir(move)))
-        breakable_map[unit.y][unit.x] = GAME_LENGTH
+        if unit.match_turn - unit.last_repair_turn > 80:
+            breakable_map[unit.y][unit.x] = 0
+            set_score_map_2(unit, TOTAL_TIME / len(my_units))
+            move = [0, 0]
+            score = score_map_2[unit.y][unit.x]
+            for dx, dy in NEIGHBORS:
+                x = unit.x + dx
+                y = unit.y + dy
+                if x > 0 and x < WIDTH and y > 0 and y < HEIGHT:
+                    s = score_map_2[y][x]
+                    if breakable_map[y][x] > unit.last_repair_turn:
+                        s -= UNIT_COST
+                    if s > score:
+                        score = s
+                        move = [dx, dy]
+            dir = move_to_dir(move)
+            if dir is not None:
+                commands.append(unit.move(move_to_dir(move)))
+            breakable_map[unit.y][unit.x] = GAME_LENGTH
+        else:
+            breakable_map[unit.y][unit.x] = 0
+            set_score_map(unit, TOTAL_TIME / len(my_units))
+            move = [0, 0]
+            score = score_map[unit.y][unit.x]
+            for dx, dy in NEIGHBORS:
+                x = unit.x + dx
+                y = unit.y + dy
+                if x > 0 and x < WIDTH and y > 0 and y < HEIGHT:
+                    s = score_map[y][x]
+                    if breakable_map[y][x] > unit.last_repair_turn:
+                        s -= UNIT_COST
+                    if s > score:
+                        score = s
+                        move = [dx, dy]
+            dir = move_to_dir(move)
+            if dir is not None:
+                commands.append(unit.move(move_to_dir(move)))
+            breakable_map[unit.y][unit.x] = GAME_LENGTH
 
     set_unit_map(my_units)
     set_score_map()
@@ -167,7 +200,14 @@ while True:
             break
         if unit_map[base.pos.y][base.pos.x]:
             continue
-        if score_map[base.pos.y][base.pos.x] * (GAME_LENGTH - agent.turn - 1) > UNIT_COST:
+        if score_map[base.pos.y][base.pos.x] * (GAME_LENGTH - agent.turn - 1) < UNIT_COST:
+            continue
+        for dx, dy in DIRS:
+            x = base.pos.x + dx
+            y = base.pos.y + dy
+            if unit_map[y][x] == 2:
+                break
+        else:
             commands.append(base.spawn_unit())
 
     ### AI Code ends here ###

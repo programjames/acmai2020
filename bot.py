@@ -62,7 +62,7 @@ def set_score_map(unit=None, max_time=0.05):
                 for dx, dy in NEIGHBORS:
                     x = dx + a
                     y = dy + b
-                    if x > 0 and x < WIDTH and y > 0 and y < HEIGHT and breakable_map[y][x] <= repair_turn:
+                    if x >= 0 and x < WIDTH and y >= 0 and y < HEIGHT and breakable_map[y][x] <= repair_turn:
                         s = max(s, score_map[y][x])
                 score_map[b][a] = energies[b][a] + 0.9 * s
 def set_score_map_2(unit=None, max_time=0.05):
@@ -79,7 +79,7 @@ def set_score_map_2(unit=None, max_time=0.05):
                 for dx, dy in NEIGHBORS:
                     x = dx + a
                     y = dy + b
-                    if x > 0 and x < WIDTH and y > 0 and y < HEIGHT and breakable_map[y][x] <= repair_turn:
+                    if x >= 0 and x < WIDTH and y >= 0 and y < HEIGHT and breakable_map[y][x] <= repair_turn:
                         s = max(s, score_map_2[y][x])
                 score_map_2[b][a] = energies[b][a] + 0.9 * s
                 if base_map[b][a]:
@@ -114,7 +114,7 @@ def set_base_map(my_bases):
 # Once initialized, we enter an infinite loop
 base_map_set = False
 
-TOTAL_TIME = 0.8
+TOTAL_TIME = 0.5
 
 move_dict = dict()
 while True:
@@ -154,6 +154,8 @@ while True:
     set_breakable_map(my_units, enemy_units, enemy_bases)
 
     for unit in my_units:
+        if time.time() - start_time > 0.8:
+            break
         if unit.match_turn - unit.last_repair_turn > 80:
             breakable_map[unit.y][unit.x] = 0
             set_score_map_2(unit, TOTAL_TIME / len(my_units))
@@ -162,7 +164,7 @@ while True:
             for dx, dy in NEIGHBORS:
                 x = unit.x + dx
                 y = unit.y + dy
-                if x > 0 and x < WIDTH and y > 0 and y < HEIGHT:
+                if x >= 0 and x < WIDTH and y >= 0 and y < HEIGHT:
                     s = score_map_2[y][x]
                     if breakable_map[y][x] > unit.last_repair_turn:
                         s -= UNIT_COST
@@ -181,7 +183,7 @@ while True:
             for dx, dy in NEIGHBORS:
                 x = unit.x + dx
                 y = unit.y + dy
-                if x > 0 and x < WIDTH and y > 0 and y < HEIGHT:
+                if x >= 0 and x < WIDTH and y >= 0 and y < HEIGHT:
                     s = score_map[y][x]
                     if breakable_map[y][x] > unit.last_repair_turn:
                         s -= UNIT_COST
@@ -194,8 +196,9 @@ while True:
             breakable_map[unit.y][unit.x] = GAME_LENGTH
 
     set_unit_map(my_units)
-    set_score_map()
-    for base in my_bases:
+    if time.time() - start_time < 0.8:
+        set_score_map(max_time=0.1)
+    for base in sorted(my_bases, key=lambda base: score_map[base.pos.y][base.pos.x], reverse=True):
         if not player.energium >= UNIT_COST:
             break
         if unit_map[base.pos.y][base.pos.x]:
@@ -209,6 +212,7 @@ while True:
                 break
         else:
             commands.append(base.spawn_unit())
+            player.energium -= UNIT_COST
 
     ### AI Code ends here ###
 

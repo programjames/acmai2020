@@ -255,7 +255,7 @@ while True:
             break
         if unit_map[base.pos.y][base.pos.x]:
             continue
-        if score_map[base.pos.y][base.pos.x] * (GAME_LENGTH - agent.turn - 1) < UNIT_COST:
+        if score_map_3[base.pos.y][base.pos.x] * (GAME_LENGTH - agent.turn - 1) < UNIT_COST:
             continue
         for dx, dy in DIRS:
             x = base.pos.x + dx

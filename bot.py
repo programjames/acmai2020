@@ -136,8 +136,8 @@ def set_base_map(my_bases):
 # Once initialized, we enter an infinite loop
 base_map_set = False
 
-TOTAL_TIME = 0.25
-MAX_TIME = 0.05
+TOTAL_TIME = 0.1
+MAX_TIME = 0.1
 
 last_moves = dict()
 last_scores = dict()
@@ -255,7 +255,7 @@ while True:
             break
         if unit_map[base.pos.y][base.pos.x]:
             continue
-        if score_map_3[base.pos.y][base.pos.x] * (GAME_LENGTH - agent.turn - 1) < UNIT_COST:
+        if score_map[base.pos.y][base.pos.x] * (GAME_LENGTH - agent.turn - 1) < UNIT_COST:
             continue
         for dx, dy in DIRS:
             x = base.pos.x + dx

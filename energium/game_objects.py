@@ -1,6 +1,6 @@
 from typing import List
 from .position import Position
-from .game_constants import GAME_CONSTANTS
+from .game_constants import GAME_CONSTANTS, DIRECTIONS
 import math
 import sys
 class Base:
@@ -13,6 +13,16 @@ class Base:
     def spawn_unit(self):
         return 'c {} {}'.format(self.pos.x, self.pos.y)
 
+def dir_to_move(dir):
+    if dir == DIRECTIONS.SOUTH:
+        return [0, 1]
+    elif dir == DIRECTIONS.NORTH:
+        return [0, -1]
+    elif dir == DIRECTIONS.EAST:
+        return [1, 0]
+    elif dir == DIRECTIONS.WEST:
+        return [-1, 0]
+    return None
 
 class Unit:
     def __init__(self, team: int, unitid: int, x, y, last_repair_turn, turn):
@@ -23,6 +33,7 @@ class Unit:
         self.y = y
         self.last_repair_turn = last_repair_turn
         self.match_turn = turn
+        self.has_moved = False
 
     def get_breakdown_level(self):
         """
@@ -30,6 +41,11 @@ class Unit:
         """
         return (self.match_turn - self.last_repair_turn) / GAME_CONSTANTS['PARAMETERS']['BREAKDOWN_TURNS'];
     def move(self, dir):
+        self.has_moved = True
+        dx, dy = dir_to_move(dir)
+        self.pos = Position(self.x + dx, self.y + dy)
+        self.x += dx
+        self.y += dy
         return 'm {} {}'.format(self.id, dir)
 
     def copy(self):

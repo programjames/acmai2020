@@ -238,7 +238,7 @@ while True:
                 if breakable_map[y][x] > unit.last_repair_turn:
                     s = -UNIT_COST
                 scores.append(s)
-                if s >= score:
+                if s > score + 0.0001: # bug where it moves up and down, this stops those micro changes from making it move.
                     score = s
                     move = [dx, dy]
         dir = move_to_dir(move)

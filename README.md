@@ -1,5 +1,5 @@
 # TODO
 
-1. Make units run away from enemies.
-1. Give each unit its own q table? (But I think the one above would solve the issue that was present...)
+1. Make units "call" spots in advance.
+1. Try making the score of a tile be better if it is further away from the base.
 2. Try a new method where it just goes to the highest one available.

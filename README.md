@@ -10,7 +10,10 @@ score = energium at this location + 0.9 * max(neighbor's scores)
 For part 5, I don't take into account any units currently on the map or else if 4 units are surrounding the base then it won't build more units.
 
 
-# UCSD Energium AI Repository Link:
+# External links:
+This is the competition website:
+https://ai.acmucsd.com/competitions/energium/ranks
+
 Here's the link to the official repository in case you want to download it yourself:
 https://github.com/acmucsd/energium-ai-2020
 
